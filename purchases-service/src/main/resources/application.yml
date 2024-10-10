@@ -1,0 +1,37 @@
+# Default Spring Profile
+server.port: 8080
+spring.datasource.hikari.initializationFailTimeout: 60000
+
+# profile used for docker
+spring:
+  config:
+    activate:
+      on-profile: docker
+  application:
+    name: purchases-service
+  datasource:
+    url: jdbc:mysql://mysql_server4/purchase-db
+    username: user
+    password: secretpwd
+  jpa:
+    hibernate:
+      ddl-auto: none
+  sql:
+    init:
+      platform: mysql
+      mode: always
+app:
+    customers-service:
+        host: customers-service
+        port: 8080
+    deliveries-service:
+        host: deliveries-service
+        port: 8080
+    furniture-service:
+        host: furniture-service
+        port: 8080
+
+
+
+
+

@@ -1,0 +1,17 @@
+@startuml
+!include <c4/C4_Context.puml>
+
+'ref http://plantuml.com/stdlib
+!include <office/Users/user.puml>
+!include <office/Users/mobile_user.puml>
+
+'LAYOUT_WITH_LEGEND
+
+
+Person(customer  , Customer ,  A customer of the furniture store")
+
+System(furniture_store_system, "Furniture Store System", "Provides the customers with a system to browse the furniture and order the items.")
+
+
+Rel(customer, furniture_store_system, "Tracks purchases made and views the products")
+@enduml

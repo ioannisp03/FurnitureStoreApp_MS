@@ -1,0 +1,56 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
+!define FONTAWESOME https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/font-awesome-5
+
+!include FONTAWESOME/users.puml
+
+AddElementTag("microService", $shape=EightSidedShape(), $bgColor="CornflowerBlue", $fontColor="white", $legendText="microservice\height sided")
+AddElementTag("storage", $shape = RoundedBoxShape(), $bgColor="lightSkyBlue", $fontColor="white")
+AddRelTag(aggregate_root, $lineColor="red")
+
+LAYOUT_TOP_DOWN()
+'LAYOUT_WITH_LEGEND()
+SHOW_PERSON_OUTLINE()
+'HIDE_STEREOTYPE()
+
+title Container Diagram for Furniture System
+
+Person(customer, Customer, "Customer of the furniture-store")
+System_Boundary(furniture-store, "Furniture System") {
+    Container(webApp, "Web Application", "JavaScript, React", "Delivers the Static content and the Furniture single page application")
+    Container(singlepage_app, "Single-Page Application", "JavaScript, React", "Provides the furniture-store functionality to customers via their browsers")
+
+    Container(api_gateway, "API Gateway", "Java, Spring Boot", "Provides furniture-store functionality via JSON/REST HTTPS APIs")
+
+    Container(purchase_service, "purchase-service", "Java, Spring Boot", "Provides purchases functionality via JSON/REST HTTPS APIs", $tags="microService")
+    Container(deliveries_service, "deliveries_service", "Java, Spring Boot", "Provides delivery functionality via JSON/REST HTTPS APIs", $tags="microService")
+    Container(customers_service, "customers-service", "Java, Spring Boot", "Provides customer functionality via JSON/REST HTTPS APIs", $tags="microService")
+    Container(furniture_service, "furniture-service", "Java, Spring Boot", "Provides customer functionality via JSON/REST HTTPS APIs", $tags="microService")
+
+    Container(purchase_db, "purchase DB", "MySQL", "Stores purchase information", $tags = "storage")
+    Container(delivery_db, "delivery DB", "MySQL 5.5.x", "Stores delivery information", $tags = "storage")
+    Container(customers_db, "customers DB", "Postgres", "Stores customer information", $tags = "storage")
+    Container(furniture_db, "furniture DB", "MySQL 5.5.x", "Stores customer information", $tags = "storage")
+
+    Rel(customer, webApp, "Visits furniture-store.com using", "HTTPS")
+    Rel_R(webApp, singlepage_app, "Delivers to the customer's browser", "HTTPS")
+    Rel(customer, singlepage_app, "Views delivery and tracks purchases using", "HTTPS")
+    Rel(singlepage_app, api_gateway, " API calls to", "JSON/REST/HTTPS")
+    Rel(api_gateway, furniture_service, " API calls to", "JSON/REST/HTTPS")
+    Rel(api_gateway, customers_service, " API calls to", "JSON/REST/HTTPS")
+    Rel(api_gateway, deliveries_service, " API calls to", "JSON/REST/HTTPS")
+    Rel(api_gateway, purchase_service, " API calls to", "JSON/REST/HTTPS")
+
+    Rel(purchase_service, furniture_service, " API calls to", "JSON/REST/HTTPS", $tags="aggregate_root")
+    Rel(purchase_service, deliveries_service, " API calls to", "JSON/REST/HTTPS", $tags="aggregate_root")
+    Rel(purchase_service, customers_service, " API calls to", "JSON/REST/HTTPS", $tags="aggregate_root")
+
+    Rel_D(furniture_service, furniture_db, "Reads from and writes to", "JDBC")
+    Rel_D(customers_service, customers_db, "Reads from and writes to", "JDBC")
+    Rel_D(deliveries_service, delivery_db, "Reads from and writes to", "JDBC")
+    Rel_R(purchase_service, purchase_db, "Reads from and writes to", "Mongo")
+}
+
+@enduml

@@ -1,0 +1,132 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: api-gateway
+    hostname: api-gateway
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - furniture-service
+      - deliveries-service
+      - customers-service
+      - purchases-service
+
+  furniture-service:
+    build: furniture-service
+    hostname: furniture-service
+#    ports:
+#      - "7003:7003"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      mysql_server3:
+        condition: service_healthy
+
+  customers-service:
+    build: customers-service
+    hostname: customers-service
+#    ports:
+#      - "7001:7001"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      mysql_server1:
+        condition: service_healthy
+
+  deliveries-service:
+    build: deliveries-service
+    hostname: deliveries-service
+#    ports:
+#      - "7002:7002"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=docker"
+    depends_on:
+      mysql_server2:
+        condition: service_healthy
+
+  purchases-service:
+    build: purchases-service
+    hostname: purchases-service
+#    ports:
+#      - "7000:7000"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - customers-service
+      - furniture-service
+      - deliveries-service
+
+  mysql_server3:
+    image: 'mysql:latest'
+    environment:
+      - 'MYSQL_DATABASE=furniture-db'
+      - 'MYSQL_USER=user'
+      - 'MYSQL_PASSWORD=secretpwd'
+      - 'MYSQL_ROOT_PASSWORD=verysecretpwd'
+    ports:
+      - "3301:3301"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-uuser", "-psecretpwd", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mysql_server1:
+    image: 'mysql:latest'
+    environment:
+      - 'MYSQL_DATABASE=customer-db'
+      - 'MYSQL_USER=user'
+      - 'MYSQL_PASSWORD=secretpwd'
+      - 'MYSQL_ROOT_PASSWORD=verysecretpwd'
+    ports:
+      - "3302:3302"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-uuser", "-psecretpwd", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mysql_server2:
+    image: 'mysql:latest'
+    environment:
+      - 'MYSQL_DATABASE=delivery-db'
+      - 'MYSQL_USER=user'
+      - 'MYSQL_PASSWORD=secretpwd'
+      - 'MYSQL_ROOT_PASSWORD=verysecretpwd'
+    ports:
+      - "3303:3303"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-uuser", "-psecretpwd", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mysql_server4:
+    image: 'mysql:latest'
+    environment:
+      - 'MYSQL_DATABASE=purchase-db'
+      - 'MYSQL_USER=user'
+      - 'MYSQL_PASSWORD=secretpwd'
+      - 'MYSQL_ROOT_PASSWORD=verysecretpwd'
+    ports:
+      - "3300:3300"
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-uuser", "-psecretpwd", "-h", "localhost" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  phpmyadmin4:
+    image: phpmyadmin:5.2.0
+    container_name: phpmyadmin4
+    links:
+      - mysql_server4
+    restart: always
+    ports:
+      - "5013:80"
+    environment:
+      - PMA_ARBITRARY=1

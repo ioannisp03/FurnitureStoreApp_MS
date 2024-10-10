@@ -1,0 +1,216 @@
+@startuml
+'https://plantuml.com/salt
+
+hide circle
+top to bottom direction
+!define ENTITY(entityName) class entityName <<Entity>>
+!define AGGREGATE(aggregateName) class aggregateName <<Aggregate>>
+!define AGGREGATE_ROOT(aggregateRootName) class aggregateRootName <<Aggregate Root>>
+!define AGGREGATE_Root_ENTITY(aggregateRootEntityName) class aggregateRootEntityName <<Aggregate Root>> << Entity >>
+!define VALUE_OBJECT(valueObjectName) class valueObjectName <<Value Object>>
+
+
+!pragma userVerticalIf on
+skinparam dpi 350
+skinparam packageStyle rectangle
+skinparam rectangle{
+
+    Background #f7f4eb
+    BorderColor Black
+
+}
+
+rectangle "Furniture Store" as BoundedContextFurnitureApp #line.dashed{
+
+    Package "Delivery Management Subdomain" <<Rectangle>> #orange{
+
+        ENTITY(Delivery) #LightCyan{
+            +id: Integer
+            +firstName : String
+            +lastName : String
+            +address : String
+            +email : String
+            +TransportDetails transportDetails
+        }
+
+        VALUE_OBJECT(DeliveryIdentifier) #LightCyan{
+            + DeliveryIdentifier: UUID
+        }
+        VALUE_OBJECT(TransportDetails) #LightCyan{
+            +warehouseLocation: String
+            +deliveryDate: LocalDate
+            +eta: String
+            +shippingNumber: String
+        }
+
+        Delivery "1" o--> "1" DeliveryIdentifier
+        Delivery "1" o--> TransportDetails
+
+    }
+
+
+    Package "Customer Management Subdomain" <<Rectangle>> #orange{
+
+        ENTITY(Customer) #LightCyan{
+           + id: Integer
+           + customerFirstName: String
+           + customerLastName: String
+           + emailAddress: String
+           + phoneNumberInformation: PhoneNumberInformation
+           + address : Address
+        }
+
+        VALUE_OBJECT(CustomerIdentifier) #LightCyan{
+           + CustomerIdentifier: UUID
+        }
+
+        VALUE_OBJECT(PhoneNumber) #LightCyan{
+            + PhoneType: type
+            + string: number
+        }
+
+        VALUE_OBJECT(Address) #LightCyan{
+                    + string: streetAddress
+                    + string: city
+                    + string: province
+                    + string: country
+                    + string: postalCode
+        }
+
+        Customer "1" o--> "1" CustomerIdentifier
+        Customer "1" o--> "1..*" PhoneNumber
+        Customer "1" o--> "1" Address
+
+}
+
+     Package "Furniture Management Subdomain" <<Rectangle>> #orange{
+
+            ENTITY(Furniture) #LightCyan{
+               + furniturePriceInformation: FurniturePriceInformation
+               + company: string
+               + deliveryInstructions: string
+            }
+
+            VALUE_OBJECT(FurnitureIdentifier) #LightCyan{
+               + FurnitureIdentifier: UUID
+            }
+
+            VALUE_OBJECT(Manufacturer) #LightCyan{
+                + manufacturerName: String
+                + country: String
+            }
+              VALUE_OBJECT(FurniturePriceInformation) #LightCyan{
+                + furnitureCost: Double
+            }
+            Furniture "1" o--> "1" FurnitureIdentifier
+            Furniture "1" o--> "1" Manufacturer
+            Furniture "1" o--> "1" FurniturePriceInformation
+
+
+}
+
+  Package "Purchase Management Subdomain" <<Rectangle>> #orange{
+
+            AGGREGATE_Root_ENTITY(Purchase) #LightCyan{
+               +purchaseDate: LocalDate
+               +paymentType: PaymentType
+               +status: Status
+
+            }
+
+            VALUE_OBJECT(PurchaseIdentifier) #LightCyan{
+               + PurchaseIdentifier: UUID
+            }
+
+
+       note "Invariant: When a purchase is deleted, the information of purchase will still remain \n in memory for future use, and the status will be set to PURCHASE_CANCELED " as purchaseInvariant
+
+
+        Purchase "1" o--> "1" PurchaseIdentifier
+
+
+        CustomerIdentifier "1" o--> "1" Purchase
+        DeliveryIdentifier "1" o--> "1" Purchase
+
+
+    }
+    Package "Inventory Management Subdomain" <<Rectangle>> #grey{
+        ENTITY(InventoryItem) #LightCyan{
+            +quantityAvailable: Integer
+            +reorderThreshold: Integer
+            +reorderAmount: Integer
+        }
+
+        VALUE_OBJECT(InventoryItemIdentifier) #LightCyan{
+            + inventoryItemIdentifier: UUID
+        }
+ VALUE_OBJECT(Location) #LightCyan{
+        + warehouseSection: String
+        + aisle: String
+        + shelf: String
+    }
+    InventoryItem "1" o--> "1" InventoryItemIdentifier
+    InventoryItem "1" o--> "1" Location
+    FurnitureIdentifier "1" o--> "1" InventoryItemIdentifier
+    FurnitureIdentifier "1" o--> "1" Purchase
+
+    }
+
+ Package "Feedback Management Subdomain" <<Rectangle>> #grey{
+       ENTITY(CustomerFeedback)#slategrey{
+           +feedbackDate: LocalDate
+           +feedbackContent: String
+           +rating: Integer
+       }
+   VALUE_OBJECT(FeedbackCategory) #slategrey{
+           + categoryName: String
+           +description: String
+       }
+       VALUE_OBJECT(FeedbackIdentifier) #slategrey{
+           + FeedbackIdentifier: UUID
+       }
+
+       CustomerFeedback "1" o--> "1" FeedbackCategory
+       CustomerIdentifier "1" --> "1" FeedbackIdentifier
+       CustomerFeedback "1" o--> "1" FeedbackIdentifier
+
+
+
+   }
+   Package "Marketing Management Subdomain" <<Rectangle>> #grey{
+       ENTITY(Campaign) #slategrey{
+           +name: String
+           +startDate: LocalDate
+           +endDate: LocalDate
+           +budget: Double
+           +status: String
+           +marketingGoal: MarketingGoal
+           +marketingChannel: MarketingChannel
+       }
+
+       VALUE_OBJECT(MarketingIdentifier) #slategrey{
+           + MarketingIdentifier: UUID
+       }
+
+       VALUE_OBJECT(MarketingChannel) #slategrey{
+           + channelName: String
+           + targetAudience: String
+           + reach: Integer
+       }
+
+       VALUE_OBJECT(MarketingGoal) #slategrey{
+           + description: String
+           + targetMetrics: String
+       }
+
+       Campaign "1" o--> "1" MarketingIdentifier
+       Campaign "1" o--> "1" MarketingChannel
+       Campaign "1" o--> "1" MarketingGoal
+       MarketingIdentifier "1" o--> "1" CustomerIdentifier
+       MarketingIdentifier "1" o--> "1" FeedbackIdentifier
+
+   }
+
+
+}
+@enduml
